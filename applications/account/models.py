@@ -9,15 +9,12 @@ from gigaline.settings import EMAIL_HOST_USER
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
-    def create_user(self, username, email, password, *args, **kwargs):
-        if not username:
-            raise ValueError("Имя пользователя обязательно.")
+    def create_user(self, email, password, *args, **kwargs):
         email = self.normalize_email(email)
-        user = self.model(email=email, username=username)
+        user = self.model(email=email)
         user.set_password(password)
-        user.create_activation_code()
+        user.is_active = True
         user.save(using=self._db)
-        print(user)
         return user
 
     def create_superuser(self, email, password, *args, **kwargs):
@@ -32,8 +29,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    username = None
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=50, unique=True, null=False, blank=False)
     is_active = models.BooleanField(default=False)
     activation_code = models.CharField(max_length=100, blank=True)
 

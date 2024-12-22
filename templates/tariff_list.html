@@ -9,18 +9,19 @@
             {% csrf_token %}
             <div class="form-group">
                 <label for="title">Название:</label>
-                <input type="text" name="title" id="title" class="form-control" required></input>
-                <label for="title">Описание:</label>
-                <input name="description" id="description" class="form-control" rows="3" required></input>
+                <input type="text" name="title" id="title" class="form-control" required>
+                
+                <label for="description">Описание:</label>
+                <textarea name="description" id="description" class="form-control" rows="3" required></textarea>
+                
                 <label for="price">Цена:</label>
                 <input type="number" name="price" id="price" class="form-control" min="0" required>
             </div>
-            <button type="submit" class="btn btn-primary">Add Tariff</button>
+            <button type="submit" class="btn btn-primary">Добавить тариф</button>
         </form>
         <hr>
     {% endif %}
 
-    <!-- Tariff List -->
     <h2>Доступные тарифы</h2>
     <table class="table table-striped">
         <thead>

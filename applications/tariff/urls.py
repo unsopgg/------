@@ -1,10 +1,10 @@
 from django.urls import path
-from . import views
+from .views import *
 
 urlpatterns = [
-    path('tariffs/', views.TariffListView.as_view(), name='tariff_list'),
-    path('requests/', views.RequestListView.as_view(), name='request_list'),
-    path('create-request/', views.RequestCreateView.as_view(), name='create_request'),
-    path('admin/requests/<int:pk>/', views.RequestAdminView.as_view(), name='request_admin'),
-    path('payment/<int:pk>/', views.PaymentView.as_view(), name='payment'),
+    path('tariffs/', tariff_list_view, name='tariff_list'),  # Обновлено на функциональное представление
+    path('requests/', request_list_view, name='request_list'),  # Обновлено на функциональное представление
+    path('requests/create/', request_create_view, name='create_request'),  # Обновлено на функциональное представление
+    path('admin/requests/', request_admin_view, name='request_admin'),  # Обновлено на функциональное представление
+    path('payment/<int:pk>/', payment_view, name='payment'),  # Обновлено на функциональное представление
 ]

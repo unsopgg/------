@@ -5,6 +5,7 @@
     <h2>Выход из аккаунта</h2>
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
+        <input type="hidden" name="auth_token" value="{{ token }}">
         <p>Вы уверены, что хотите выйти?</p>
         <button type="submit" class="btn btn-danger">Выйти</button>
         <a href="/" class="btn btn-secondary">Отмена</a>
