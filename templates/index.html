@@ -12,8 +12,8 @@
             <ul>
                 <li><a href="/">Главная</a></li>
                 <li><a href="/tariff/tariffs/">Тарифы</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="/requests">Оставить заявку</a></li>
+                {% if request.session.token %}
+                    <li><a href="/tariff/requests/">Заявки</a></li>
                     <li><a href="/account/logout/">Выход</a></li>
                 {% else %}
                     <li><a href="/account/login/">Вход</a></li>

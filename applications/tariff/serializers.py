@@ -38,9 +38,7 @@ class RequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Request
-        fields = (
-            'id', 'tarif', 'user', 'date_of_application', 'status', 'adress', 'price_status'
-        )
+        fields = '__all__'
 
     def validate(self, data):
         if data['status'] not in dict(Request.STATUS_CHOICES):
@@ -56,15 +54,4 @@ class RequestSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-    
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if instance.price_status == 'unpaid':
-            if instance.status == 'APPROVED':
-                representation['price_status'] = "Заявка одобрена, пожалуйста проведите оплату."
-            elif instance.status == 'DECLINED':
-                representation['status'] = "Заявка не одобрена."
-            elif instance.status == 'WAITING':
-                representation['status'] = "Заявка рассматривается, ожидайте пожалуйста."
-        return representation
 

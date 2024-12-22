@@ -52,7 +52,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.CharField(min_length=1)
-    password = serializers.CharField(style= {'input_type':'password'}, trim_whitespace=False)
+    password = serializers.CharField(style={'input_type': 'password'}, trim_whitespace=False)
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -63,12 +63,10 @@ class LoginSerializer(serializers.Serializer):
             if not user:
                 msg = 'Невозможно войти в систему с предоставленными учетными данными'
                 raise serializers.ValidationError(msg, code='authorization')
-
         else:
-            msg = 'Должен включать "username" и "password"'
+            msg = 'Должны быть предоставлены как "email", так и "password"'
             raise serializers.ValidationError(msg, code='authorization')
 
-        
         attrs['user'] = user
         return attrs
 

@@ -1,29 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Список тарифов</title>
-</head>
-<body>
-    <div class="container">
-        {% block content %}
-        <h2>Available Tariffs</h2>
-    
-        <ul class="tariff-list">
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Список тарифов</h1>
+    {% if user.is_staff %}
+        <h2>Добавить новый тариф</h2>
+        <form method="post" action="{% url 'tariff_list' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="title">Название:</label>
+                <input type="text" name="title" id="title" class="form-control" required></input>
+                <label for="title">Описание:</label>
+                <input name="description" id="description" class="form-control" rows="3" required></input>
+                <label for="price">Цена:</label>
+                <input type="number" name="price" id="price" class="form-control" min="0" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Tariff</button>
+        </form>
+        <hr>
+    {% endif %}
+
+    <!-- Tariff List -->
+    <h2>Доступные тарифы</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Цена</th>
+            </tr>
+        </thead>
+        <tbody>
             {% for tariff in tariffs %}
-            <li class="tariff-item">
-                <h4>{{ tariff.title }}</h4>
-                <p>{{ tariff.description }}</p>
-                <p class="price">${{ tariff.price }}</p>
-            </li>
+                <tr>
+                    <td>{{ tariff.title }}</td>
+                    <td>{{ tariff.description }}</td>
+                    <td>{{ tariff.price }}</td>
+                </tr>
             {% empty %}
-            <p>No tariffs available at the moment.</p>
+                <tr>
+                    <td colspan="3">Тарифов нет.</td>
+                </tr>
             {% endfor %}
-        </ul>
-    
-        
-        {% endblock %}
-    </div>
-</body>
-</html>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

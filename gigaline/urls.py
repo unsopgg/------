@@ -10,7 +10,6 @@ from gigaline import settings
 
 schema_view = get_schema_view(
     openapi.Info(
-
         title = "Authentication API",
         default_version = 'v1',
         description = 'SomeDescription'
@@ -21,6 +20,8 @@ schema_view = get_schema_view(
 def home_view(request):
     tariffs = Tariff.objects.all()
     return render(request, 'index.html', {'tariffs': tariffs})
+
+
 
 urlpatterns = [
     path("", home_view, name="index"),

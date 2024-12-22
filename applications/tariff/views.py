@@ -1,103 +1,129 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from rest_framework import status, generics
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.response import Response
+from django.views.generic import ListView, DetailView
+from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
 from rest_framework.views import APIView
+from rest_framework.response import Response 
 from .models import Tariff, Request
-from .serializers import TariffSerializer, RequestSerializer
+from .serializers import RequestSerializer
 from django.contrib.auth import get_user_model
-from rest_framework.generics import get_object_or_404
 from .tasks import *
 import datetime
-
 User = get_user_model()
 
-class TariffView(APIView):
-    def get(self, request):
-        tariffs = Tariff.objects.all()
-        serializer = TariffSerializer(tariffs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+# Tariff List View (for regular users)
+class TariffListView(ListView):
+    model = Tariff
+    template_name = 'tariff_list.html'  
+    context_object_name = 'tariffs'
 
-class TariffAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    def post(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            price = request.POST.get('price')
 
-    def post(self, request):
-        data = request.data
-        serializer = TariffSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response('Тариф добавлен!', status=status.HTTP_201_CREATED)
+            if title and description and price:
+                Tariff.objects.create(title=title, description=description, price=price)
+                return redirect('tariff_list')  # Redirect after creating a new tariff
+        return super().post(request, *args, **kwargs)
 
-    def get(self, request):
-        tariffs = Tariff.objects.all()
-        serializer = TariffSerializer(tariffs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-class RequestView(APIView):
-    permission_classes = [IsAuthenticated]
+class RequestListView(ListView):
+    model = Request
+    template_name = 'requests.html'
+    context_object_name = 'requests'
 
-    def get(self, request):
-        if not request.user.is_staff:
-            requests = Request.objects.filter(user=request.user)
-            serialized_requests = []
-            for req in requests:
-                serialized_data = RequestSerializer(req).data
-                if req.price_status == 'PAID':
-                    serialized_data['message'] = 'Ожидайте подключения'
-                serialized_requests.append(serialized_data)
-            return Response(serialized_requests, status=status.HTTP_200_OK)
-        else:
+    # Переписанный метод для получения queryset
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            # Для администраторов, фильтрация по статусу и статусу оплаты
+            status_filter = self.request.GET.get('status', '')
+            price_status_filter = self.request.GET.get('price_status', '')
             requests = Request.objects.all()
-            serializer = RequestSerializer(requests, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+
+            if status_filter:
+                requests = requests.filter(status=status_filter)
+            if price_status_filter:
+                requests = requests.filter(price_status=price_status_filter)
+
+        elif self.request.user.is_authenticated:
+            # Для аутентифицированных пользователей
+            requests = Request.objects.filter(user=self.request.user)
+        else:
+            # Для анонимных пользователей, возвращаем пустой queryset
+            requests = Request.objects.none()
+
+        return requests
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tariffs'] = Tariff.objects.all()
+        if not self.request.user.is_staff:
+            # Для обычных пользователей, если заявка существует, передаем первую заявку в контекст
+            user_request = self.get_queryset().first() if self.get_queryset().exists() else None
+            context['user_request'] = user_request
+        return context
 
 class RequestCreateView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
     queryset = Request.objects.all()
     serializer_class = RequestSerializer
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, date_of_application=datetime.date.today(), status='WAITING', price_status='unpaid')
-        admin_emails = User.objects.filter(is_staff=True).values_list('email', flat=True)
-        send_request_mail(list(admin_emails))
+        if self.request.user.is_authenticated:
+            # Получение тарифов и их сохранение
+            tarif_id = self.request.data.get('tarif')
+            tarif = Tariff.objects.get(id=tarif_id)
 
-class RequestAdminView(APIView):
-    permission_classes = [IsAdminUser]
+            # Сохранение данных заявки
+            serializer.save(
+                user=self.request.user,
+                tarif=tarif,
+                adress=self.request.data.get('adress'),
+                date_of_application=datetime.date.today(),
+                status='WAITING',
+                price_status='unpaid'
+            )
+            admin_emails = User.objects.filter(is_staff=True).values_list('email', flat=True)
+            send_request_mail(list(admin_emails))
+            return redirect('requests')
+        else:
+            return redirect('login')
 
-    def patch(self, request, pk):
-        request_obj = get_object_or_404(Request, pk=pk)
-        status_update = request.data.get('status')
+# Admin Request Management
+class RequestAdminView(DetailView):
+    model = Request
+    template_name = 'requests.html'
+    context_object_name = 'request'
+    
+    def post(self, request, *args, **kwargs):
+        # Получаем объект заявки
+        request_obj = self.get_object()
+        status_update = request.POST.get('status')
+
         if status_update not in dict(Request.STATUS_CHOICES):
-            return Response({"error": "Некорректный статус."}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": "Некорректный статус."}, status=400)
+        
         request_obj.status = status_update
         request_obj.save()
+        
+        # Отправляем email пользователю о статусе
         if request_obj.user and request_obj.user.email:
             send_status_mail(request_obj.user.email)
-        return Response('Статус заявки обновлен!', status=status.HTTP_200_OK)
 
-class PaymentView(APIView): 
+        return render(request, 'requests.html', {'request': request_obj})
+# Payment View
+class PaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         request_obj = get_object_or_404(Request, pk=pk, user=request.user)
+        
         if request_obj.price_status == 'PAID':
             return Response('Заявка уже оплачена.', status=status.HTTP_400_BAD_REQUEST)
+        
         request_obj.price_status = 'PAID'
         request_obj.save()
-        return Response('Оплата проведена успешно!', status=status.HTTP_200_OK)
-
-def tariff_list_view(request):
-    tariffs = Tariff.objects.all()
-    
-    # Check if the user is an admin and has submitted the form
-    if request.method == 'POST' and request.user.is_staff:
-        # Handle tariff creation
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
         
-        if title and description and price:
-            new_tariff = Tariff.objects.create(title=title, description=description, price=price)
-            return redirect('tariff_list')  # Redirect after creating a new tariff
-    
-    return render(request, 'tariff_list.html', {'tariffs': tariffs})
+        return render(request, 'payment_success.html', {'request': request_obj})
