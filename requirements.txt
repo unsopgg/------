@@ -1,0 +1,14 @@
+asgiref
+django
+django-rest-framework
+djangorestframework
+Pillow
+psycopg
+pytz
+sqlparse
+django-decouple
+drf-yasg
+django-filter
+transliterate
+celery
+redis

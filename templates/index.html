@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>{% block title %}Gigaline{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/tariff/tariffs/">Тарифы</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="/requests">Оставить заявку</a></li>
+                    <li><a href="/account/logout/">Выход</a></li>
+                {% else %}
+                    <li><a href="/account/login/">Вход</a></li>
+                    <li><a href="/account/register/">Регистрация</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        <h1>Доступные Тарифы</h1>
+        <ul>
+            {% for tariff in tariffs %}
+                <li>
+                    <h2>{{ tariff.title }}</h2>
+                    <p>{{ tariff.description }}</p>
+                    <p>Цена: {{ tariff.price }} Сом</p>
+                </li>
+            {% endfor %}
+        </ul>
+        {% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2024 Django Project</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список тарифов</title>
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+        <h2>Available Tariffs</h2>
+    
+        <ul class="tariff-list">
+            {% for tariff in tariffs %}
+            <li class="tariff-item">
+                <h4>{{ tariff.title }}</h4>
+                <p>{{ tariff.description }}</p>
+                <p class="price">${{ tariff.price }}</p>
+            </li>
+            {% empty %}
+            <p>No tariffs available at the moment.</p>
+            {% endfor %}
+        </ul>
+    
+        
+        {% endblock %}
+    </div>
+</body>
+</html>
