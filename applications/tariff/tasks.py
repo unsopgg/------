@@ -31,3 +31,18 @@ def send_request_mail(admin_emails):
         admin_emails,
         fail_silently=False
     )
+
+@shared_task
+def send_update_request_mail(admin_emails):
+    message = '''
+    Данная заявка была изменена:
+    http://127.0.0.1:8000/tariff/requests/admin/
+    '''
+
+    send_mail(
+        'Request has been updated',
+        message,
+        'kimyunsopbi@gmail.com',
+        admin_emails,
+        fail_silently=False
+    )

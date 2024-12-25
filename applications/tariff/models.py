@@ -21,5 +21,8 @@ class Request(models.Model):
     date_of_application = models.DateField()
     status = models.CharField(max_length=15, choices=STATUS_CHOICES)
     adress = models.CharField(max_length=50)
+    pod = models.CharField(max_length=50, blank=True)
+    kvar = models.CharField(max_length=50, blank=True)
+    phnumber = models.CharField(max_length=15)
     price_status = models.CharField(max_length=15, choices=PRICE_STATUS_CHOICES)
 

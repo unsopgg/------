@@ -33,6 +33,7 @@
             <tr>
                 <th>Пользователь</th>
                 <th>Дата подачи</th>
+                <th>Тариф</th>
                 <th>Статус</th>
                 <th>Статус оплаты</th>
                 <th>Действия</th>
@@ -41,8 +42,9 @@
         <tbody>
             {% for req in requests %}
                 <tr>
-                    <td>{{ req.user.username }}</td>
+                    <td>{{ req.user.email }}</td>
                     <td>{{ req.date_of_application }}</td>
+                    <td>{{ req.tarif.title }}</td>
                     <td>{{ req.get_status_display }}</td>
                     <td>{{ req.get_price_status_display }}</td>
                     <td>
@@ -57,6 +59,9 @@
                             </select>
                             <button type="submit" class="btn btn-primary mt-2">Обновить</button>
                         </form>
+                    </td>
+                    <td>
+                        <a href="{% url 'request_detail' req.id %}" class="btn btn-info">Подробнее</a>
                     </td>
                 </tr>
             {% empty %}

@@ -2,69 +2,67 @@
 
 {% block content %}
 <div class="container">
-    <h1>Управление заявками</h1>
-
-    <!-- Фильтры для админа -->
-    <form method="GET" class="form-inline mb-3">
-        <div class="form-group mr-2">
-            <label for="status" class="mr-2">Статус заявки:</label>
-            <select name="status" class="form-control" id="status">
-                <option value="">Все</option>
-                {% for key, value in status_choices %}
-                    <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group mr-2">
-            <label for="price_status" class="mr-2">Статус оплаты:</label>
-            <select name="price_status" class="form-control" id="price_status">
-                <option value="">Все</option>
-                {% for key, value in price_status_choices %}
-                    <option value="{{ key }}" {% if request.GET.price_status == key %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Фильтровать</button>
-    </form>
-
-    <!-- Таблица заявок -->
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Пользователь</th>
-                <th>Дата подачи</th>
-                <th>Статус</th>
-                <th>Статус оплаты</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for req in requests %}
+    {% if user_request %}
+        <h2>Ваша заявка</h2>
+        <table class="table table-bordered">
+            <thead>
                 <tr>
-                    <td>{{ req.user.username }}</td>
-                    <td>{{ req.date_of_application }}</td>
-                    <td>{{ req.get_status_display }}</td>
-                    <td>{{ req.get_price_status_display }}</td>
+                    <th>Дата подачи</th>
+                    <th>Тариф</th>
+                    <th>Статус</th>
+                    <th>Статус оплаты</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ user_request.date_of_application }}</td>
+                    <td>{{ user_request.tarif.title }}</td>
+                    <td>{{ user_request.get_status_display }}</td>
+                    <td>{{ user_request.get_price_status_display }}</td>
                     <td>
-                        <form method="POST" action="">
-                            {% csrf_token %}
-                            <input type="hidden" name="request_id" value="{{ req.id }}">
-                            <label for="status_{{ req.id }}">Изменить статус:</label>
-                            <select name="status" class="form-control" id="status_{{ req.id }}" required>
-                                {% for key, value in req.STATUS_CHOICES %}
-                                    <option value="{{ key }}" {% if req.status == key %}selected{% endif %}>{{ value }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="submit" class="btn btn-primary mt-2">Обновить</button>
-                        </form>
+                        <a href="{% url 'request_detail' req.id %}" class="btn btn-info">Подробнее</a>
                     </td>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5">Нет доступных заявок.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+
+    {% else %}
+        <h2>Подать новую заявку</h2>
+        <form method="POST" action="{% url 'request_list' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="tarif">Тариф</label>
+                <select name="tarif" id="tarif" class="form-control" required>
+                    <option value="" disabled selected>Выберите тариф</option>
+                    {% for tariff in tariffs %}
+                        <option value="{{ tariff.id }}">{{ tariff.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="adress">Адрес</label>
+                <input type="text" name="adress" id="adress" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="pod">Подъезд (необязательно)</label>
+                <input type="text" name="pod" id="pod" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="kvar">Квартира (необязательно)</label>
+                <input type="text" name="kvar" id="kvar" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="phnumber">Номер телефона</label>
+                <input type="text" name="phnumber" id="phnumber" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-success">Отправить заявку</button>
+        </form>
+    {% endif %}
 </div>
 {% endblock %}

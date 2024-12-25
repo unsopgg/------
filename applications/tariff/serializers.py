@@ -35,6 +35,9 @@ class RequestSerializer(serializers.ModelSerializer):
     date_of_application = serializers.HiddenField(default=datetime.date.today)
     status = serializers.HiddenField(default='WAITING')
     price_status = serializers.HiddenField(default='unpaid')
+    pod = serializers.CharField(required=False, allow_blank=True)
+    kvar = serializers.CharField(required=False, allow_blank=True)
+    phnumber = serializers.CharField(required=True)
 
     class Meta:
         model = Request
@@ -43,7 +46,8 @@ class RequestSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['status'] not in dict(Request.STATUS_CHOICES):
             raise serializers.ValidationError({"status": "Некорректный статус заявки."})
-
+        if len(data['phnumber']) < 10:
+            raise serializers.ValidationError({"phnumber": "Номер телефона должен содержать минимум 10 символов."})
         return data
 
     def create(self, validated_data):

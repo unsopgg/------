@@ -1,0 +1,90 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Детали заявки</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Дата подачи</th>
+                <th>Тариф</th>
+                <th>Адрес</th>
+                <th>Подъезд</th>
+                <th>Квартира</th>
+                <th>Номер телефона</th>
+                <th>Статус</th>
+                <th>Статус оплаты</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ user_request.date_of_application }}</td>
+                <td>{{ user_request.tarif.title }}</td>
+                <td>{{ user_request.adress }}</td>
+                <td>{{ user_request.pod }}</td>
+                <td>{{ user_request.kvar }}</td>
+                <td>{{ user_request.phnumber }}</td>
+                <td>{{ user_request.get_status_display }}</td>
+                <td>{{ user_request.get_price_status_display }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if user_request.user == request.user %}
+        <h3>Изменить заявку</h3>
+        <form method="POST" action="{% url 'request_detail' user_request.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="tarif">Тариф</label>
+                <select name="tarif" id="tarif" class="form-control" required>
+                    {% for tariff in tariffs %}
+                        <option value="{{ tariff.id }}" {% if tariff.id == user_request.tarif.id %}selected{% endif %}>{{ tariff.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="adress">Адрес</label>
+                <input type="text" name="adress" id="adress" class="form-control" value="{{ user_request.adress }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="pod">Подъезд</label>
+                <input type="text" name="pod" id="pod" class="form-control" value="{{ user_request.pod }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="kvar">Квартира</label>
+                <input type="text" name="kvar" id="kvar" class="form-control" value="{{ user_request.kvar }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phnumber">Номер телефона</label>
+                <input type="text" name="phnumber" id="phnumber" class="form-control" value="{{ user_request.phnumber }}" required>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Сохранить изменения</button>
+            </div>
+        </form>
+    {% endif %}
+
+    {% if request.user.is_staff %}
+        <h3>Изменить статус заявки</h3>
+        <form method="POST" action="{% url 'request_detail' user_request.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="status">Статус</label>
+                <select name="status" id="status" class="form-control" required>
+                    <option value="approved" {% if user_request.status == 'approved' %}selected{% endif %}>Одобрено</option>
+                    <option value="declined" {% if user_request.status == 'declined' %}selected{% endif %}>Отклонено</option>
+                    <option value="waiting" {% if user_request.status == 'waiting' %}selected{% endif %}>В ожидании</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-warning">Изменить статус</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
